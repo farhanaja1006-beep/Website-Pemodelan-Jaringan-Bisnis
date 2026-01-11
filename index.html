@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Pemodelan Jaringan Bisnis</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- VIS NETWORK -->
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f8;
+    overflow-x: hidden;
+}
+
+/* ===== LANDING PAGE ===== */
+#landing {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1f3c88, #162447);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 10;
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+#landing.hide {
+    opacity: 0;
+    transform: scale(1.1);
+    pointer-events: none;
+}
+
+#landing h1 {
+    font-size: 36px;
+}
+
+#landing p {
+    max-width: 600px;
+    margin: 20px;
+}
+
+#landing button {
+    padding: 15px 30px;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: white;
+    color: #1f3c88;
+    font-weight: bold;
+}
+
+/* ===== MAIN CONTENT ===== */
+#main {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+#main.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+header {
+    background: #1f3c88;
+    color: white;
+    padding: 40px;
+    text-align: center;
+}
+
+nav {
+    background: #162447;
+    padding: 12px;
+    text-align: center;
+}
+
+nav a {
+    color: white;
+    margin: 0 15px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+section {
+    background: white;
+    max-width: 1000px;
+    margin: 25px auto;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+h2 {
+    color: #1f3c88;
+}
+
+#network {
+    width: 100%;
+    height: 420px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-top: 15px;
+}
+
+input, select, button {
+    padding: 10px;
+    margin-top: 5px;
+    width: 100%;
+}
+
+button {
+    background: #1f3c88;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+footer {
+    background: #162447;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+    header {
+        padding: 25px 15px;
+    }
+
+    header h1 {
+        font-size: 24px;
+    }
+
+    nav a {
+        display: block;
+        margin: 10px 0;
+        font-size: 16px;
+    }
+
+    section {
+        margin: 15px;
+        padding: 20px;
+    }
+
+    input, select, button {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    #network {
+        height: 300px;
+    }
+
+    footer {
+        font-size: 14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== LANDING PAGE ===== -->
+<div id="landing">
+    <h1>Pemodelan Jaringan Bisnis</h1>
+    <p>
+        Visualisasi dan analisis hubungan antar mitra bisnis
+        menggunakan pendekatan Graph Theory.
+    </p>
+    <button onclick="masukWebsite()">Masuk Website</button>
+</div>
+
+<!-- ===== MAIN WEBSITE ===== -->
+<div id="main">
+
+<header>
+    <h1>Pemodelan Jaringan Bisnis</h1>
+    <p>Visualisasi hubungan antar mitra menggunakan Graph Theory</p>
+</header>
+
+<nav>
+    <a href="#jaringan">Jaringan</a>
+    <a href="#analisis">Analisis</a>
+    <a href="#" onclick="kembaliKeAwal()">Kembali ke Awal</a>
+</nav>
+
+<section id="jaringan">
+    <h2>Manajemen Jaringan Mitra</h2>
+
+    <div class="form-group">
+        <input id="mitraBaru" placeholder="Nama Mitra Baru">
+        <button onclick="tambahMitra()">Tambah Mitra</button>
+    </div>
+
+    <div class="form-group">
+        <select id="hapusMitra"></select>
+        <button onclick="hapusMitra()">Hapus Mitra</button>
+    </div>
+
+    <div class="form-group">
+        <select id="fromMitra"></select>
+        <select id="toMitra"></select>
+        <input id="bobot" type="number" placeholder="Bobot Hubungan">
+        <button onclick="tambahHubungan()">Tambah Hubungan</button>
+    </div>
+
+    <div id="network"></div>
+</section>
+
+<section id="analisis">
+    <h2>Analisis Jaringan</h2>
+    <p id="mitraKunci"><strong>Mitra Paling Berpengaruh:</strong> -</p>
+</section>
+
+<footer>
+    <p>Nama Pembuat | Kelas / Institusi</p>
+    <p>© 2026</p>
+</footer>
+
+</div>
+
+<script>
+/* ===== TRANSISI ===== */
+function masukWebsite() {
+    document.getElementById("landing").classList.add("hide");
+    setTimeout(() => {
+        document.getElementById("main").classList.add("show");
+        highlightMitraKunci();
+    }, 400);
+}
+
+function kembaliKeAwal() {
+    document.getElementById("main").classList.remove("show");
+    setTimeout(() => {
+        document.getElementById("landing").classList.remove("hide");
+    }, 400);
+}
+
+/* ===== GRAPH DATA ===== */
+let nodeId = 3;
+
+const nodes = new vis.DataSet([
+    { id: 1, label: "Supplier A", color: "#1f3c88", size: 20 },
+    { id: 2, label: "Distributor B", color: "#1f3c88", size: 20 },
+    { id: 3, label: "Retail C", color: "#1f3c88", size: 20 }
+]);
+
+const edges = new vis.DataSet([]);
+
+const network = new vis.Network(
+    document.getElementById("network"),
+    { nodes, edges },
+    {
+        physics: true,
+        interaction: {
+            dragNodes: true,
+            dragView: true,
+            zoomView: true
+        }
+    }
+);
+
+/* ===== DROPDOWN ===== */
+function updateDropdown() {
+    ["fromMitra","toMitra","hapusMitra"].forEach(id => {
+        document.getElementById(id).innerHTML = "";
+        nodes.forEach(n => {
+            document.getElementById(id).innerHTML +=
+                `<option value="${n.id}">${n.label}</option>`;
+        });
+    });
+}
+updateDropdown();
+
+/* ===== CRUD ===== */
+function tambahMitra() {
+    if (!mitraBaru.value) return;
+    nodeId++;
+    nodes.add({ id: nodeId, label: mitraBaru.value, color: "#1f3c88", size: 20 });
+    mitraBaru.value = "";
+    updateDropdown();
+    highlightMitraKunci();
+}
+
+function hapusMitra() {
+    const id = parseInt(hapusMitra.value);
+    nodes.remove(id);
+    edges.forEach(e => {
+        if (e.from === id || e.to === id) edges.remove(e.id);
+    });
+    updateDropdown();
+    highlightMitraKunci();
+}
+
+function tambahHubungan() {
+    const f = parseInt(fromMitra.value);
+    const t = parseInt(toMitra.value);
+    const b = parseInt(bobot.value);
+    if (f === t || !b) return;
+
+    edges.add({
+        from: f,
+        to: t,
+        weight: b,
+        label: b.toString(),
+        width: b
+    });
+    bobot.value = "";
+    highlightMitraKunci();
+}
+
+/* ===== HIGHLIGHT MITRA KUNCI ===== */
+function highlightMitraKunci() {
+    let max = 0, key = null;
+
+    nodes.forEach(n => nodes.update({ id: n.id, color: "#1f3c88", size: 20 }));
+
+    nodes.forEach(n => {
+        let total = 0;
+        edges.forEach(e => {
+            if (e.from === n.id || e.to === n.id) total += e.weight || 1;
+        });
+        if (total > max) { max = total; key = n.id; }
+    });
+
+    if (key) {
+        nodes.update({
+            id: key,
+            color: { background: "#e63946", border: "#b11226" },
+            size: 30
+        });
+
+        document.getElementById("mitraKunci").innerHTML =
+            `<strong>Mitra Paling Berpengaruh:</strong> ${nodes.get(key).label}`;
+
+        network.focus(key, { scale: 1.2, animation: true });
+    }
+}
+</script>
+
+</body>
+</html>
